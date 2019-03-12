@@ -10,6 +10,10 @@ python3 setup.py build_ext --inplace
 
 ## Testing the module
 
+Make sure ssh under account where you run the tests to the same
+account on `localhost` passes, using public key authentication.
+In other words, `ssh localhost true` needs to work.
+
 Test it with
 ```
 python3 setup.py test

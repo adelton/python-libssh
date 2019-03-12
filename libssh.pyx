@@ -128,3 +128,7 @@ cdef class Session:
 		}
 		raise libsshException(msg_map[state])
 
+	def authenticate_pubkey(self):
+		if ssh_userauth_publickey_auto(self._libssh_session, NULL, NULL) != SSH_AUTH_SUCCESS:
+			raise libsshException(self)
+

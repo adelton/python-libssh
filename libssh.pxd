@@ -61,6 +61,16 @@ cdef extern from "libssh/libssh.h" nogil:
 	int ssh_get_publickey_hash(const ssh_key, ssh_publickey_hash_type, unsigned char **, size_t *)
 	char * ssh_get_hexa(const unsigned char *, size_t)
 
+	cdef enum ssh_auth_e:
+		SSH_AUTH_SUCCESS,
+		SSH_AUTH_DENIED,
+		SSH_AUTH_PARTIAL,
+		SSH_AUTH_INFO,
+		SSH_AUTH_AGAIN,
+		SSH_AUTH_ERROR
+
+	int ssh_userauth_publickey_auto(ssh_session, const char *, const char *)
+
 cdef class Session:
 	cdef ssh_session _libssh_session
 	cdef _opts

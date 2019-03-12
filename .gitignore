@@ -3,4 +3,6 @@ build
 libssh.c
 libssh.cpython*
 python_libssh.egg-info
+.testkey
+.testkey.pub
 tests/__pycache__
