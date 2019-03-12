@@ -26,3 +26,5 @@ before_script:
 
 script:
 - docker build -t python-libssh -f tests/Dockerfile .
+- docker run --name python-libssh --rm -d python-libssh
+- docker exec python-libssh python3 setup.py test
