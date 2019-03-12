@@ -1,0 +1,7 @@
+.git
+__pycache__
+build
+libssh.c
+libssh.cpython*
+python_libssh.egg-info
+tests/__pycache__
