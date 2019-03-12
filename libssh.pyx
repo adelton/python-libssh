@@ -22,10 +22,8 @@ cdef class Session:
 			raise MemoryError
 		if host:
 			self.host = host
-		if "port" in kwargs:
-			self.port = kwargs["port"]
-		if "knownhosts" in kwargs:
-			self.knownhosts = kwargs["knownhosts"]
+		for key in kwargs:
+			self.__setattr__(key, kwargs[key])
 
 	def __dealloc__(self):
 		if self._libssh_session is not NULL:
@@ -38,38 +36,36 @@ cdef class Session:
 		return ssh_get_error(self._libssh_session).decode()
 
 	@property
-	def host(self):
-		cdef char * value
-		if ssh_options_get(self._libssh_session, SSH_OPTIONS_HOST, &value) != SSH_OK:
-			return None
-		ret = value.decode()
-		ssh_string_free_char(value)
-		return ret
-	@host.setter
-	def host(self, unicode value):
-		ssh_options_set(self._libssh_session, SSH_OPTIONS_HOST, PyBytes_AS_STRING(value.encode("utf-8")))
-
-	@property
 	def port(self):
 		cdef unsigned int port_i
 		if ssh_options_get_port(self._libssh_session, &port_i) != SSH_OK:
 			return None
 		return port_i
-	@port.setter
-	def port(self, int value):
-		ssh_options_set(self._libssh_session, SSH_OPTIONS_PORT, &value)
 
-	@property
-	def knownhosts(self):
+	opts_map = {
+		"host": SSH_OPTIONS_HOST,
+		"knownhosts": SSH_OPTIONS_KNOWNHOSTS,
+		"port": SSH_OPTIONS_PORT,
+	}
+	def __getattr__(self, key):
+		if not key in type(self).opts_map:
+			raise libsshException("Unknown attribute name [%s]" % key)
 		cdef char * value
-		if ssh_options_get(self._libssh_session, SSH_OPTIONS_KNOWNHOSTS, &value) != SSH_OK:
+		if ssh_options_get(self._libssh_session, type(self).opts_map[key], &value) != SSH_OK:
 			return None
 		ret = value.decode()
 		ssh_string_free_char(value)
 		return ret
-	@knownhosts.setter
-	def knownhosts(self, unicode value):
-		ssh_options_set(self._libssh_session, SSH_OPTIONS_KNOWNHOSTS, PyBytes_AS_STRING(value.encode("utf-8")))
+
+	def __setattr__(self, key, value):
+		cdef unsigned int port_i
+		if not key in type(self).opts_map:
+			raise libsshException("Unknown attribute name [%s]" % key)
+		if key == "port":
+			port_i = value
+			ssh_options_set(self._libssh_session, SSH_OPTIONS_PORT, &port_i)
+		else:
+			ssh_options_set(self._libssh_session, type(self).opts_map[key], PyBytes_AS_STRING(value.encode("utf-8")))
 
 	def connect(self):
 		if ssh_connect(self._libssh_session) != SSH_OK:
