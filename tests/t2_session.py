@@ -30,7 +30,26 @@ class SessionTest(unittest.TestCase):
 			session.connect()
 		self.assertEqual(str(cm.exception), "Connection refused")
 
-	def test3_session_ok(self):
+	def test3_session_options(self):
+		session = libssh.Session("unknown-localhost")
+		self.assertEqual(session.host, "unknown-localhost")
+		self.assertEqual(session.port, 22)
+
+		session = libssh.Session("unknown-localhost", port=222)
+		self.assertEqual(session.host, "unknown-localhost")
+		self.assertEqual(session.port, 222)
+
+		session = libssh.Session(host="unknown-localhost", port=222)
+		self.assertEqual(session.host, "unknown-localhost")
+		self.assertEqual(session.port, 222)
+		self.assertIsNone(session.knownhosts)
+
+		session = libssh.Session(port=222, knownhosts="/dev/null")
+		self.assertIsNone(session.host)
+		self.assertEqual(session.port, 222)
+		self.assertEqual(session.knownhosts, "/dev/null")
+
+	def test4_session_ok(self):
 		session = libssh.Session()
 		self.assertIsInstance(session, libssh.Session)
 		session.host = "localhost"
@@ -41,7 +60,7 @@ class SessionTest(unittest.TestCase):
 		session.disconnect()
 		self.assertFalse(session.is_connected())
 
-	def test4_session_unknown(self):
+	def test5_session_unknown(self):
 		session = libssh.Session()
 		self.assertIsInstance(session, libssh.Session)
 		session.host = "localhost"

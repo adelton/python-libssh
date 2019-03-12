@@ -16,10 +16,16 @@ cdef class libsshException(Exception):
 		super().__init__(object)
 
 cdef class Session:
-	def __cinit__(self):
+	def __cinit__(self, host=None, **kwargs):
 		self._libssh_session = ssh_new()
 		if self._libssh_session is NULL:
 			raise MemoryError
+		if host:
+			self.host = host
+		if "port" in kwargs:
+			self.port = kwargs["port"]
+		if "knownhosts" in kwargs:
+			self.knownhosts = kwargs["knownhosts"]
 
 	def __dealloc__(self):
 		if self._libssh_session is not NULL:
