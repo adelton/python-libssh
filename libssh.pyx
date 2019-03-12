@@ -11,7 +11,9 @@ version = LIBSSH_VERSION.decode("ascii")
 
 cdef class libsshException(Exception):
 	def __init__(self, object):
-		super().__init__(object._get_error_str())
+		if not isinstance(object, unicode):
+			object = object._get_error_str()
+		super().__init__(object)
 
 cdef class Session:
 	def __cinit__(self):
@@ -51,14 +53,61 @@ cdef class Session:
 	def port(self, int value):
 		ssh_options_set(self._libssh_session, SSH_OPTIONS_PORT, &value)
 
+	@property
+	def knownhosts(self):
+		cdef char * value
+		if ssh_options_get(self._libssh_session, SSH_OPTIONS_KNOWNHOSTS, &value) != SSH_OK:
+			return None
+		ret = value.decode()
+		ssh_string_free_char(value)
+		return ret
+	@knownhosts.setter
+	def knownhosts(self, unicode value):
+		ssh_options_set(self._libssh_session, SSH_OPTIONS_KNOWNHOSTS, PyBytes_AS_STRING(value.encode("utf-8")))
+
 	def connect(self):
 		if ssh_connect(self._libssh_session) != SSH_OK:
 			ssh_disconnect(self._libssh_session)
 			raise libsshException(self)
+		try:
+			self.verify_knownhost()
+		except Exception:
+			ssh_disconnect(self._libssh_session)
+			raise
 
 	def is_connected(self):
 		return self._libssh_session is not NULL and ssh_is_connected(self._libssh_session)
 
 	def disconnect(self):
 		ssh_disconnect(self._libssh_session)
+
+	def get_server_publickey(self):
+		cdef ssh_key srv_pubkey = NULL;
+		cdef unsigned char * hash = NULL;
+		cdef size_t hash_len;
+		if ssh_get_server_publickey(self._libssh_session, &srv_pubkey) != SSH_OK:
+			return None
+		rc = ssh_get_publickey_hash(srv_pubkey, SSH_PUBLICKEY_HASH_SHA1, &hash, &hash_len)
+		ssh_key_free(srv_pubkey)
+		if rc != SSH_OK:
+			return None
+		cdef char * hash_hex = ssh_get_hexa(hash, hash_len)
+		hash_py = hash_hex.decode("ascii")
+		ssh_string_free_char(hash_hex)
+		return hash_py
+
+	def verify_knownhost(self):
+		cdef ssh_known_hosts_e state = ssh_session_is_known_server(self._libssh_session)
+		if state == SSH_KNOWN_HOSTS_OK:
+			return True
+		hash = self.get_server_publickey()
+		if state == SSH_KNOWN_HOSTS_ERROR:
+			raise libsshException(self)
+		msg_map = {
+			SSH_KNOWN_HOSTS_CHANGED: "Host key for server has changed: " + hash,
+			SSH_KNOWN_HOSTS_OTHER: "Host key type for server has changed: " + hash,
+			SSH_KNOWN_HOSTS_NOT_FOUND: "Host file not found",
+			SSH_KNOWN_HOSTS_UNKNOWN: "Host is unknown: " + hash,
+		}
+		raise libsshException(msg_map[state])
 

@@ -41,3 +41,15 @@ class SessionTest(unittest.TestCase):
 		session.disconnect()
 		self.assertFalse(session.is_connected())
 
+	def test4_session_unknown(self):
+		session = libssh.Session()
+		self.assertIsInstance(session, libssh.Session)
+		session.host = "localhost"
+		self.assertIsNone(session.knownhosts)
+		session.knownhosts = "/dev/null"
+		self.assertEqual(session.knownhosts, "/dev/null")
+		with self.assertRaises(libssh.libsshException) as cm:
+			session.connect()
+		self.assertRegex(str(cm.exception), r"Host is unknown: ([0-9a-f][0-9a-z]:){19}[0-9a-f][0-9a-z]$")
+		self.assertFalse(session.is_connected())
+

@@ -25,13 +25,38 @@ cdef extern from "libssh/libssh.h" nogil:
 	int ssh_is_connected(ssh_session)
 	void ssh_disconnect(ssh_session)
 
+	cdef enum ssh_known_hosts_e:
+		SSH_KNOWN_HOSTS_ERROR,
+		SSH_KNOWN_HOSTS_NOT_FOUND,
+		SSH_KNOWN_HOSTS_UNKNOWN,
+		SSH_KNOWN_HOSTS_OK,
+		SSH_KNOWN_HOSTS_CHANGED,
+		SSH_KNOWN_HOSTS_OTHER
+
+	ssh_known_hosts_e ssh_session_is_known_server(ssh_session)
+
 	cdef enum ssh_options_e:
 		SSH_OPTIONS_HOST,
-		SSH_OPTIONS_PORT
+		SSH_OPTIONS_PORT,
+		SSH_OPTIONS_KNOWNHOSTS
 
 	int ssh_options_get(ssh_session, ssh_options_e, char **)
 	int ssh_options_get_port(ssh_session, unsigned int *)
 	int ssh_options_set(ssh_session, ssh_options_e, const void *)
+
+	struct ssh_key_struct:
+		pass
+	ctypedef ssh_key_struct * ssh_key
+
+	int ssh_get_server_publickey(ssh_session, ssh_key *)
+	void ssh_key_free(ssh_key)
+
+	cdef enum ssh_publickey_hash_type:
+		SSH_PUBLICKEY_HASH_SHA1,
+		SSH_PUBLICKEY_HASH_SHA256
+
+	int ssh_get_publickey_hash(const ssh_key, ssh_publickey_hash_type, unsigned char **, size_t *)
+	char * ssh_get_hexa(const unsigned char *, size_t)
 
 cdef class Session:
 	cdef ssh_session _libssh_session
