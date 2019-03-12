@@ -18,6 +18,7 @@ cdef class libsshException(Exception):
 cdef class Session:
 	def __cinit__(self, host=None, **kwargs):
 		self._libssh_session = ssh_new()
+		self._opts = {}
 		if self._libssh_session is NULL:
 			raise MemoryError
 		if host:
@@ -46,9 +47,16 @@ cdef class Session:
 		"host": SSH_OPTIONS_HOST,
 		"knownhosts": SSH_OPTIONS_KNOWNHOSTS,
 		"port": SSH_OPTIONS_PORT,
+		"user": SSH_OPTIONS_USER,
+	}
+	opts_dir_map = {
+		"ssh_dir": SSH_OPTIONS_SSH_DIR,
+		"add_identity": SSH_OPTIONS_ADD_IDENTITY,
 	}
 	def __getattr__(self, key):
 		if not key in type(self).opts_map:
+			if key in type(self).opts_dir_map:
+				return self._opts[key]
 			raise libsshException("Unknown attribute name [%s]" % key)
 		cdef char * value
 		if ssh_options_get(self._libssh_session, type(self).opts_map[key], &value) != SSH_OK:
@@ -59,13 +67,20 @@ cdef class Session:
 
 	def __setattr__(self, key, value):
 		cdef unsigned int port_i
-		if not key in type(self).opts_map:
+		key_m = None
+		if key in type(self).opts_dir_map:
+			key_m = type(self).opts_dir_map[key]
+		elif key in type(self).opts_map:
+			key_m = type(self).opts_map[key]
+		else:
 			raise libsshException("Unknown attribute name [%s]" % key)
 		if key == "port":
 			port_i = value
 			ssh_options_set(self._libssh_session, SSH_OPTIONS_PORT, &port_i)
 		else:
-			ssh_options_set(self._libssh_session, type(self).opts_map[key], PyBytes_AS_STRING(value.encode("utf-8")))
+			ssh_options_set(self._libssh_session, key_m, PyBytes_AS_STRING(value.encode("utf-8")))
+			if key in type(self).opts_dir_map:
+				self._opts[key] = value
 
 	def connect(self):
 		if ssh_connect(self._libssh_session) != SSH_OK:

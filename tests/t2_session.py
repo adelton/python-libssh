@@ -49,6 +49,14 @@ class SessionTest(unittest.TestCase):
 		self.assertEqual(session.port, 222)
 		self.assertEqual(session.knownhosts, "/dev/null")
 
+		session = libssh.Session(ssh_dir="/dev/null", user="bob")
+		self.assertEqual(session.ssh_dir, "/dev/null")
+		self.assertEqual(session.user, "bob")
+
+		session = libssh.Session(ssh_dir="/dev/null", add_identity="./testkey")
+		self.assertEqual(session.ssh_dir, "/dev/null")
+		self.assertEqual(session.add_identity, "./testkey")
+
 	def test4_session_ok(self):
 		session = libssh.Session()
 		self.assertIsInstance(session, libssh.Session)

@@ -38,7 +38,10 @@ cdef extern from "libssh/libssh.h" nogil:
 	cdef enum ssh_options_e:
 		SSH_OPTIONS_HOST,
 		SSH_OPTIONS_PORT,
-		SSH_OPTIONS_KNOWNHOSTS
+		SSH_OPTIONS_KNOWNHOSTS,
+		SSH_OPTIONS_USER,
+		SSH_OPTIONS_SSH_DIR,
+		SSH_OPTIONS_ADD_IDENTITY,
 
 	int ssh_options_get(ssh_session, ssh_options_e, char **)
 	int ssh_options_get_port(ssh_session, unsigned int *)
@@ -60,4 +63,5 @@ cdef extern from "libssh/libssh.h" nogil:
 
 cdef class Session:
 	cdef ssh_session _libssh_session
+	cdef _opts
 
