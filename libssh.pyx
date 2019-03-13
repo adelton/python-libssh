@@ -96,7 +96,11 @@ cdef class Session:
 			if key in type(self).opts_dir_map:
 				self._opts[key] = value
 
-	def connect(self):
+	def connect(self, host=None, **kwargs):
+		if host:
+			self.host = host
+		for key in kwargs:
+			self.__setattr__(key, kwargs[key])
 		if ssh_connect(self._libssh_session) != SSH_OK:
 			ssh_disconnect(self._libssh_session)
 			raise libsshException(self)

@@ -82,7 +82,16 @@ class SessionTest(unittest.TestCase):
 		self.assertRegex(str(cm.exception), r"Host is unknown: ([0-9a-f][0-9a-z]:){19}[0-9a-f][0-9a-z]$")
 		self.assertFalse(session.is_connected())
 
-	def test6_session_auth(self):
+	def test6_session_connect_options(self):
+		session = libssh.Session(port = 122)
+		self.assertIsInstance(session, libssh.Session)
+		session.host = "localhost"
+		session.connect("localhost", port = 22)
+		self.assertTrue(session.is_connected())
+		session.disconnect()
+		self.assertFalse(session.is_connected())
+
+	def test9_session_auth(self):
 		# check that authentication to our account on locahost works
 		ssh_ext = subprocess.run(["ssh", "localhost", "exit", "42"])
 		self.assertIsNotNone(ssh_ext)
