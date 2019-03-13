@@ -28,3 +28,4 @@ script:
 - docker build -t python-libssh -f tests/Dockerfile .
 - docker run --name python-libssh --rm -d python-libssh
 - docker exec python-libssh python3 setup.py test
+- docker exec python-libssh bash -c 'cp -rp tests /tmp/tests && cd /tmp/tests && for i in *.py ; do python3 $i ; done'

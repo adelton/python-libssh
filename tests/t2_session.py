@@ -112,3 +112,6 @@ class SessionTest(unittest.TestCase):
 			session.authenticate_pubkey()
 		self.assertRegex(str(cm.exception), r"^Access denied for 'publickey'\. Authentication that can continue:")
 
+if __name__ == '__main__':
+	unittest.main()
+

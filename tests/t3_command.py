@@ -60,3 +60,6 @@ class CommandTest(unittest.TestCase):
 		self.assertEqual(command_finished.stderr, b"stderr-data\n")
 		session.disconnect()
 
+if __name__ == '__main__':
+	unittest.main()
+

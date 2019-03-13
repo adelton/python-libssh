@@ -12,3 +12,6 @@ class VersionTest(unittest.TestCase):
 		self.assertIsNotNone(rpm_q_libssh.stdout)
 		self.assertEqual(libssh.version, rpm_q_libssh.stdout.decode())
 
+if __name__ == '__main__':
+	unittest.main()
+
