@@ -1,6 +1,7 @@
 .git
 __pycache__
 build
+dist
 libssh.c
 libssh.cpython*
 python_libssh.egg-info
