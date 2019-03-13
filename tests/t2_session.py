@@ -4,7 +4,7 @@ import libssh
 
 class SessionTest(unittest.TestCase):
 
-	def test_session_host(self):
+	def test1_session_host(self):
 		session = libssh.Session()
 		self.assertIsNotNone(session)
 		self.assertIsInstance(session, libssh.Session)
@@ -18,7 +18,7 @@ class SessionTest(unittest.TestCase):
 			session.connect()
 		self.assertEqual(str(cm.exception), "Failed to resolve hostname unknown-localhost (Name or service not known)")
 
-	def test_session_port(self):
+	def test2_session_port(self):
 		session = libssh.Session()
 		self.assertIsInstance(session, libssh.Session)
 		session.host = "localhost"
@@ -30,7 +30,7 @@ class SessionTest(unittest.TestCase):
 			session.connect()
 		self.assertEqual(str(cm.exception), "Connection refused")
 
-	def test_session_ok(self):
+	def test3_session_ok(self):
 		session = libssh.Session()
 		self.assertIsInstance(session, libssh.Session)
 		session.host = "localhost"
