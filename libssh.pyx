@@ -6,6 +6,9 @@
 
 cimport libssh
 from cpython.bytes cimport PyBytes_AS_STRING
+from libc.stdint cimport uint32_t
+from libc.string cimport memset
+from subprocess import CalledProcessError, CompletedProcess
 
 version = LIBSSH_VERSION.decode("ascii")
 
@@ -15,12 +18,23 @@ cdef class libsshException(Exception):
 			object = object._get_error_str()
 		super().__init__(object)
 
+cdef int _process_outputs(ssh_session session, ssh_channel channel, void *data, uint32_t len, int is_stderr, void *userdata):
+	if len == 0:
+		return 0
+	data_b = <bytes>(<char *>data)[:len]
+	result = <object>userdata
+	if is_stderr:
+		result.stderr += data_b
+	else:
+		result.stdout += data_b
+	return len
+
 cdef class Session:
 	def __cinit__(self, host=None, **kwargs):
 		self._libssh_session = ssh_new()
-		self._opts = {}
 		if self._libssh_session is NULL:
 			raise MemoryError
+		self._opts = {}
 		if host:
 			self.host = host
 		for key in kwargs:
@@ -99,9 +113,9 @@ cdef class Session:
 		ssh_disconnect(self._libssh_session)
 
 	def get_server_publickey(self):
-		cdef ssh_key srv_pubkey = NULL;
-		cdef unsigned char * hash = NULL;
-		cdef size_t hash_len;
+		cdef ssh_key srv_pubkey = NULL
+		cdef unsigned char * hash = NULL
+		cdef size_t hash_len
 		if ssh_get_server_publickey(self._libssh_session, &srv_pubkey) != SSH_OK:
 			return None
 		rc = ssh_get_publickey_hash(srv_pubkey, SSH_PUBLICKEY_HASH_SHA1, &hash, &hash_len)
@@ -131,4 +145,35 @@ cdef class Session:
 	def authenticate_pubkey(self):
 		if ssh_userauth_publickey_auto(self._libssh_session, NULL, NULL) != SSH_AUTH_SUCCESS:
 			raise libsshException(self)
+
+	def run(self, command):
+		cdef ssh_channel channel = ssh_channel_new(self._libssh_session)
+		if channel is NULL:
+			raise MemoryError
+		rc = ssh_channel_open_session(channel)
+		if rc != SSH_OK:
+			ssh_channel_free(channel)
+			raise CalledProcessError()
+
+		rc = ssh_channel_request_exec(channel, command.encode("utf-8"))
+		if rc != SSH_OK:
+			ssh_channel_close(channel)
+			ssh_channel_free(channel)
+			raise CalledProcessError()
+
+		cdef ssh_channel_callbacks_struct cb
+		memset(&cb, 0, sizeof(cb))
+		cb.channel_data_function = <ssh_channel_data_callback>&_process_outputs
+		result = CompletedProcess(args = command, returncode = -1, stdout = b'', stderr = b'')
+		cb.userdata = <void *>result
+		ssh_callbacks_init(&cb)
+		ssh_set_channel_callbacks(channel, &cb)
+
+		ssh_channel_send_eof(channel)
+		result.returncode = ssh_channel_get_exit_status(channel)
+
+		ssh_channel_close(channel)
+		ssh_channel_free(channel)
+
+		return result
 
