@@ -5,6 +5,7 @@
 # see file COPYING in this repository.
 
 from libc.stdint cimport uint32_t
+from posix.types cimport mode_t
 
 cdef extern from "libssh/libssh.h" nogil:
 
@@ -143,7 +144,33 @@ cdef extern from "libssh/callbacks.h" nogil:
 
 	int ssh_set_channel_callbacks(ssh_channel, ssh_channel_callbacks)
 
+cdef extern from "sys/stat.h" nogil:
+
+	cdef int S_IRWXU
+
+cdef extern from "libssh/sftp.h" nogil:
+
+	struct sftp_session_struct:
+		pass
+	ctypedef sftp_session_struct * sftp_session
+
+	sftp_session sftp_new(ssh_session)
+	int sftp_init(sftp_session)
+	void sftp_free(sftp_session)
+
+	struct sftp_file_struct:
+		pass
+	ctypedef sftp_file_struct * sftp_file
+
+	sftp_file sftp_open(sftp_session, const char *, int, mode_t)
+	int sftp_close(sftp_file)
+	ssize_t sftp_write(sftp_file, const void *, size_t)
+
 cdef class Session:
 	cdef ssh_session _libssh_session
 	cdef _opts
+
+cdef class SFTP:
+	cdef Session session
+	cdef sftp_session _libssh_sftp_session
 

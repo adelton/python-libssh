@@ -8,6 +8,7 @@ cimport libssh
 from cpython.bytes cimport PyBytes_AS_STRING
 from libc.stdint cimport uint32_t
 from libc.string cimport memset
+from posix.fcntl cimport O_WRONLY, O_CREAT, O_TRUNC
 from subprocess import CalledProcessError, CompletedProcess
 
 version = LIBSSH_VERSION.decode("ascii")
@@ -180,4 +181,47 @@ cdef class Session:
 		ssh_channel_free(channel)
 
 		return result
+
+	def sftp(self):
+		return SFTP(self)
+
+cdef ssh_session _get_libssh_session(Session session):
+	return session._libssh_session
+
+cdef class libsshSFTPException(libsshException):
+	def __init__(self, object, message):
+		super().__init__(message + ": " + object._get_error_str())
+
+cdef class SFTP:
+	def __cinit__(self, session):
+		self.session = session
+		self._libssh_sftp_session = sftp_new(_get_libssh_session(session))
+		if self._libssh_sftp_session is NULL:
+			raise libsshException(session)
+		if sftp_init(self._libssh_sftp_session) != SSH_OK:
+			raise libsshSFTPException(self, "Error initializing SFTP session")
+
+	def __dealloc__(self):
+		if self._libssh_sftp_session is not NULL:
+			sftp_free(self._libssh_sftp_session)
+			self._libssh_sftp_session = NULL
+
+	def _get_error_str(self):
+		return self.session._get_error_str()
+
+	def put(self, local_file, remote_file):
+		cdef sftp_file rf
+		with open(local_file, "rb") as f:
+			rf = sftp_open(self._libssh_sftp_session, remote_file.encode("utf-8"), O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU)
+			if rf is NULL:
+				raise libsshSFTPException(self, "Opening remote file [%s] for write failed" % remote_file)
+			buffer = f.read(1024)
+			while buffer != b"":
+				length = len(buffer)
+				written = sftp_write(rf, PyBytes_AS_STRING(buffer), length)
+				if written != length:
+					sftp_close(rf)
+					raise libsshSFTPException(self, "Writing to remote file [%s] failed" % remote_file)
+				buffer = f.read(1024)
+			sftp_close(rf)
 

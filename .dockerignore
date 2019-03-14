@@ -5,6 +5,8 @@ dist
 libssh.c
 libssh.cpython*
 python_libssh.egg-info
+.testfile.in
+.testfile.out
 .testkey
 .testkey.pub
 tests/__pycache__
