@@ -212,7 +212,10 @@ cdef class SFTP:
 	def put(self, local_file, remote_file):
 		cdef sftp_file rf
 		with open(local_file, "rb") as f:
-			rf = sftp_open(self._libssh_sftp_session, remote_file.encode("utf-8"), O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU)
+			remote_file_b = remote_file
+			if isinstance(remote_file_b, unicode):
+				remote_file_b = remote_file.encode("utf-8")
+			rf = sftp_open(self._libssh_sftp_session, remote_file_b, O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU)
 			if rf is NULL:
 				raise libsshSFTPException(self, "Opening remote file [%s] for write failed" % remote_file)
 			buffer = f.read(1024)
