@@ -182,11 +182,42 @@ cdef class Session:
 
 		return result
 
+	def new_channel(self):
+		return Channel(self)
+
+	def new_shell_channel(self):
+		channel = Channel(self)
+		channel.request_shell()
+		return channel
+
 	def sftp(self):
 		return SFTP(self)
 
 cdef ssh_session _get_libssh_session(Session session):
 	return session._libssh_session
+
+cdef class Channel:
+	def __cinit__(self, session):
+		self._libssh_channel = ssh_channel_new(_get_libssh_session(session))
+		if self._libssh_channel is NULL:
+			raise MemoryError
+		rc = ssh_channel_open_session(self._libssh_channel)
+		if rc != SSH_OK:
+			self._libssh_channel = NULL
+			ssh_channel_free(self._libssh_channel)
+			raise libsshException("Failed to open_session: [%d]" % rc)
+
+	def __dealloc__(self):
+		if self._libssh_channel is NULL:
+			ssh_channel_close(self._libssh_channel)
+			ssh_channel_free(self._libssh_channel)
+			self._libssh_channel = NULL
+
+	def request_shell(self):
+		rc = ssh_channel_request_shell(self._libssh_channel)
+		if rc != SSH_OK:
+			raise libsshException("Failed to request_shell: [%d]" % rc)
+
 
 cdef class libsshSFTPException(libsshException):
 	def __init__(self, object, message):

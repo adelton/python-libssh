@@ -82,6 +82,7 @@ cdef extern from "libssh/libssh.h" nogil:
 	void ssh_channel_free(ssh_channel)
 
 	int ssh_channel_open_session(ssh_channel)
+	int ssh_channel_request_shell(ssh_channel)
 	int ssh_channel_is_open(ssh_channel)
 	int ssh_channel_close(ssh_channel)
 
@@ -169,6 +170,9 @@ cdef extern from "libssh/sftp.h" nogil:
 cdef class Session:
 	cdef ssh_session _libssh_session
 	cdef _opts
+
+cdef class Channel:
+	cdef ssh_channel _libssh_channel
 
 cdef class SFTP:
 	cdef Session session
