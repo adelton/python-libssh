@@ -82,6 +82,7 @@ cdef extern from "libssh/libssh.h" nogil:
 	void ssh_channel_free(ssh_channel)
 
 	int ssh_channel_open_session(ssh_channel)
+	int ssh_channel_request_pty(ssh_channel)
 	int ssh_channel_request_shell(ssh_channel)
 	int ssh_channel_is_open(ssh_channel)
 	int ssh_channel_write(ssh_channel, const void *, uint32_t)

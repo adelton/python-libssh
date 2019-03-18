@@ -214,6 +214,9 @@ cdef class Channel:
 			self._libssh_channel = NULL
 
 	def request_shell(self):
+		rc = ssh_channel_request_pty(self._libssh_channel)
+		if rc != SSH_OK:
+			raise libsshException("Failed to request_pty: [%d]" % rc)
 		rc = ssh_channel_request_shell(self._libssh_channel)
 		if rc != SSH_OK:
 			raise libsshException("Failed to request_shell: [%d]" % rc)
