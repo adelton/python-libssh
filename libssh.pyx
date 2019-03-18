@@ -218,6 +218,13 @@ cdef class Channel:
 		if rc != SSH_OK:
 			raise libsshException("Failed to request_shell: [%d]" % rc)
 
+	def read_nonblocking(self, size=1024, stderr=0):
+		cdef char buffer[1024]
+		size_m = size
+		if size_m > sizeof(buffer):
+			size_m = sizeof(buffer)
+		nbytes = ssh_channel_read_nonblocking(self._libssh_channel, buffer, size_m, stderr)
+		return <bytes>buffer[:nbytes]
 
 cdef class libsshSFTPException(libsshException):
 	def __init__(self, object, message):
