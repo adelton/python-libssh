@@ -184,6 +184,7 @@ import os
 import signal
 import socket
 import traceback
+from time import sleep
 
 from ansible.errors import AnsibleConnectionFailure
 from ansible.module_utils.six import BytesIO, PY3
@@ -225,14 +226,14 @@ class Connection(NetworkConnectionBase):
 
         self._terminal = None
         self.cliconf = None
-        self.paramiko_conn = None
+        self.libssh_conn = None
 
         if self._play_context.verbosity > 3:
-            logging.getLogger('paramiko').setLevel(logging.DEBUG)
+            logging.getLogger('libssh').setLevel(logging.DEBUG)
 
     def _get_log_channel(self):
         name = "p=%s u=%s | " % (os.getpid(), getpass.getuser())
-        name += "paramiko [%s]" % self._play_context.remote_addr
+        name += "libssh [%s]" % self._play_context.remote_addr
         return name
 
     def get_prompt(self):
@@ -302,17 +303,17 @@ class Connection(NetworkConnectionBase):
                 )
             display.display('network_os is set to %s' % self._network_os, log_only=True)
 
-            self.paramiko_conn = connection_loader.get('paramiko', self._play_context, '/dev/null')
-            self.paramiko_conn._set_log_channel(self._get_log_channel())
-            self.paramiko_conn.set_options(direct={'look_for_keys': not bool(self._play_context.password and not self._play_context.private_key_file)})
-            self.paramiko_conn.force_persistence = self.force_persistence
-            ssh = self.paramiko_conn._connect()
+            self.libssh_conn = connection_loader.get('libssh', self._play_context, '/dev/null')
+            self.libssh_conn._set_log_channel(self._get_log_channel())
+            self.libssh_conn.set_options(direct={'look_for_keys': not bool(self._play_context.password and not self._play_context.private_key_file)})
+            self.libssh_conn.force_persistence = self.force_persistence
+            ssh = self.libssh_conn._connect()
 
             host = self.get_option('host')
             display.vvvv('ssh connection done, setting terminal', host=host)
 
-            self._ssh_shell = ssh.ssh.invoke_shell()
-            self._ssh_shell.settimeout(self.get_option('persistent_command_timeout'))
+            self._ssh_shell = ssh.ssh.new_shell_channel()
+            # self._ssh_shell.settimeout(self.get_option('persistent_command_timeout'))
 
             self._terminal = terminal_loader.get(self._network_os, self)
             if not self._terminal:
@@ -359,8 +360,8 @@ class Connection(NetworkConnectionBase):
                 self._ssh_shell = None
                 display.debug("cli session is now closed")
 
-                self.paramiko_conn.close()
-                self.paramiko_conn = None
+                self.libssh_conn.close()
+                self.libssh_conn = None
                 display.debug("ssh connection has been closed successfully")
         super(Connection, self).close()
 
@@ -375,11 +376,11 @@ class Connection(NetworkConnectionBase):
         command_prompt_matched = False
         matched_prompt_window = window_count = 0
 
-        cache_socket_timeout = self._ssh_shell.gettimeout()
+        # cache_socket_timeout = self._ssh_shell.gettimeout()
         command_timeout = self.get_option('persistent_command_timeout')
         self._validate_timeout_value(command_timeout, "persistent_command_timeout")
-        if cache_socket_timeout != command_timeout:
-            self._ssh_shell.settimeout(command_timeout)
+        # if cache_socket_timeout != command_timeout:
+        #    self._ssh_shell.settimeout(command_timeout)
 
         buffer_read_timeout = self.get_option('persistent_buffer_read_timeout')
         self._validate_timeout_value(buffer_read_timeout, "persistent_buffer_read_timeout")
@@ -389,7 +390,8 @@ class Connection(NetworkConnectionBase):
                 try:
                     signal.signal(signal.SIGALRM, self._handle_buffer_read_timeout)
                     signal.setitimer(signal.ITIMER_REAL, buffer_read_timeout)
-                    data = self._ssh_shell.recv(256)
+                    sleep(1)
+                    data = self._ssh_shell.read_nonblocking(256)
                     signal.alarm(0)
                     # if data is still received on channel it indicates the prompt string
                     # is wrongly matched in between response chunks, continue to read
@@ -402,10 +404,11 @@ class Connection(NetworkConnectionBase):
 
                 except AnsibleCmdRespRecv:
                     # reset socket timeout to global timeout
-                    self._ssh_shell.settimeout(cache_socket_timeout)
+                    # self._ssh_shell.settimeout(cache_socket_timeout)
                     return self._command_response
             else:
-                data = self._ssh_shell.recv(256)
+                sleep(1)
+                data = self._ssh_shell.read_nonblocking(256)
 
             # when a channel stream is closed, received data will be empty
             if not data:
@@ -450,7 +453,8 @@ class Connection(NetworkConnectionBase):
                 raise AnsibleConnectionFailure("Number of prompts (%s) is not same as that of answers (%s)" % (prompt_len, answer_len))
         try:
             self._history.append(command)
-            self._ssh_shell.sendall(b'%s\r' % command)
+            self._ssh_shell.write(b'%s\r' % command)
+            sleep(3)
             if sendonly:
                 return
             response = self.receive(command, prompt, answer, newline, prompt_retry_check, check_all)
@@ -458,7 +462,7 @@ class Connection(NetworkConnectionBase):
         except (socket.timeout, AttributeError):
             display.vvvv(traceback.format_exc(), host=self._play_context.remote_addr)
             raise AnsibleConnectionFailure("timeout value %s seconds reached while trying to send command: %s"
-                                           % (self._ssh_shell.gettimeout(), command.strip()))
+                                           % (0, command.strip()))
 
     def _handle_buffer_read_timeout(self, signum, frame):
         display.vvvv("Response received, triggered 'persistent_buffer_read_timeout' timer of %s seconds"
