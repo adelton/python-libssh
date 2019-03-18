@@ -226,6 +226,9 @@ cdef class Channel:
 		nbytes = ssh_channel_read_nonblocking(self._libssh_channel, buffer, size_m, stderr)
 		return <bytes>buffer[:nbytes]
 
+	def write(self, data):
+		return ssh_channel_write(self._libssh_channel, PyBytes_AS_STRING(data), len(data))
+
 cdef class libsshSFTPException(libsshException):
 	def __init__(self, object, message):
 		super().__init__(message + ": " + object._get_error_str())
