@@ -15,11 +15,7 @@ matrix:
     - stage: build-and-test
       env: fedora=rawhide
     - stage: build-and-test
-      env: fedora=30
-    - stage: build-and-test
-      env: fedora=29
-    - stage: build-and-test
-      env: fedora=28
+      env: fedora=latest
 
 before_script:
 - if test -n "$fedora" ; then sed -i "s#^FROM.*#FROM registry.fedoraproject.org/fedora:$fedora#" tests/Dockerfile ; fi
