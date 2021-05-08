@@ -13,6 +13,8 @@ stages:
 matrix:
   include:
     - stage: build-and-test
+      env: fedora=rawhide
+    - stage: build-and-test
       env: fedora=latest
 
 before_script:
