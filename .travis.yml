@@ -13,7 +13,7 @@ stages:
 matrix:
   include:
     - stage: build-and-test
-      env: fedora=latest
+      env: fedora=33
 
 before_script:
 - if test -n "$fedora" ; then sed -i "s#^FROM.*#FROM registry.fedoraproject.org/fedora:$fedora#" tests/Dockerfile ; fi
