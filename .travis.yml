@@ -19,7 +19,9 @@ before_script:
 - if test -n "$fedora" ; then sed -i "s#^FROM.*#FROM registry.fedoraproject.org/fedora:$fedora#" tests/Dockerfile ; fi
 
 script:
+- sed -i 's/^RUN dnf/RUN dnf/;t;s/^RUN/# RUN/; s%^ENTRYPOINT.*%ENTRYPOINT [ "/usr/bin/sleep", "600" ]%;' tests/Dockerfile
 - docker build -t python-libssh -f tests/Dockerfile .
-- docker run --name python-libssh --rm -d python-libssh
-- docker exec python-libssh python3 setup.py test
+- docker run --security-opt=seccomp:unconfined --name python-libssh --rm -d python-libssh
+- sed 's/# RUN //;t;d' tests/Dockerfile | while read i ; do docker exec python-libssh bash -c "$i" ; done
+- docker exec python-libssh /usr/sbin/sshd -D & docker exec python-libssh python3 setup.py test
 - docker exec python-libssh bash -c 'cp -rp tests /tmp/tests && cd /tmp/tests && for i in *.py ; do python3 $i ; done'
