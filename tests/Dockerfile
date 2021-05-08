@@ -1,4 +1,4 @@
-FROM registry.fedoraproject.org/fedora:rawhide
+FROM registry.fedoraproject.org/fedora
 RUN dnf install -y --setopt=install_weak_deps=False python3-devel python3-Cython make gcc libssh-devel openssh-server openssh-clients rpm-build
 RUN for i in rsa ecdsa ed25519 ; do /usr/libexec/openssh/sshd-keygen $i ; done
 RUN mkdir ~/.ssh && echo localhost $( cat /etc/ssh/ssh_host_ecdsa_key.pub ) > ~/.ssh/known_hosts
