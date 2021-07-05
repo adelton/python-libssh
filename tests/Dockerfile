@@ -1,4 +1,5 @@
 FROM registry.fedoraproject.org/fedora
+RUN sed -i 's/^enabled.*/enabled=1/' /etc/yum.repos.d/CentOS-Stream-PowerTools.repo || :
 RUN dnf install -y --setopt=install_weak_deps=False python3-devel python3-setuptools python3-Cython make gcc libssh-devel openssh-server openssh-clients rpm-build
 RUN grep hosts: /etc/nsswitch.conf && sed -i 's/^hosts:.*/hosts: files dns myhostname/' /etc/nsswitch.conf
 RUN echo 'set enable-bracketed-paste off' >> ~root/.inputrc
