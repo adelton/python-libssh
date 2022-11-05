@@ -1,5 +1,9 @@
 FROM registry.fedoraproject.org/fedora
-RUN sed -i 's/^enabled.*/enabled=1/' /etc/yum.repos.d/CentOS-Stream-PowerTools.repo || :
+RUN if test -f /etc/centos-release ; then dnf install -y 'dnf-command(config-manager)' ; fi
+RUN if test -f /etc/centos-release && grep 'CentOS Stream release 8' /etc/centos-release ; then \
+	dnf config-manager --set-enabled powertools ; fi
+RUN if test -f /etc/centos-release && grep 'CentOS Stream release 9' /etc/centos-release ; then \
+	dnf config-manager --set-enabled crb ; fi
 RUN dnf install -y --setopt=install_weak_deps=False python3-devel python3-setuptools python3-Cython make gcc libssh-devel openssh-server openssh-clients rpm-build
 RUN if test -f /etc/nsswitch.conf ; then grep hosts: /etc/nsswitch.conf && sed -i 's/^hosts:.*/hosts: files dns myhostname/' /etc/nsswitch.conf ; fi
 RUN echo 'set enable-bracketed-paste off' >> ~root/.inputrc
