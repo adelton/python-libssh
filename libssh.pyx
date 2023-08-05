@@ -19,7 +19,7 @@ cdef class libsshException(Exception):
 			object = object._get_error_str()
 		super().__init__(object)
 
-cdef int _process_outputs(ssh_session session, ssh_channel channel, void *data, uint32_t len, int is_stderr, void *userdata):
+cdef int _process_outputs(ssh_session session, ssh_channel channel, void *data, uint32_t len, int is_stderr, void *userdata) with gil:
 	if len == 0:
 		return 0
 	data_b = <bytes>(<char *>data)[:len]
