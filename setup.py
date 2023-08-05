@@ -17,7 +17,8 @@ setup(
 	version = "0.0.1",
 	description = "Python bindings to client functionality of libssh",
 	ext_modules = cythonize([Extension("libssh", ["libssh.pyx"],
-							libraries=["ssh"])]),
+							libraries=["ssh"])],
+			compiler_directives={"language_level" : "3"}),
 	classifiers = [
 		"Development Status :: 2 - Pre-Alpha",
 		"License :: OSI Approved :: GNU Lesser General Public License v2 (LGPLv2)",
