@@ -9,7 +9,7 @@ from posix.types cimport mode_t
 
 cdef extern from "libssh/libssh.h" nogil:
 
-	cpdef const char * LIBSSH_VERSION "SSH_STRINGIFY(LIBSSH_VERSION)"
+	cdef const char * LIBSSH_VERSION "SSH_STRINGIFY(LIBSSH_VERSION)"
 
 	cdef int SSH_OK
 	cdef int SSH_ERROR
