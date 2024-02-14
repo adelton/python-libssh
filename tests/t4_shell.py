@@ -20,7 +20,7 @@ class ShellTest(unittest.TestCase):
 		self.assertIsInstance(channel, libssh.Channel)
 
 		data = channel.read_nonblocking()
-		self.assertRegex(data.decode('utf-8'), r"^$|^Last login: ")
+		self.assertRegex(data.decode('utf-8'), r"^$|^Last login: |^Warning: your password will expire in 0 days\.\r\nLast login: ")
 		sleep(1)
 		data = channel.read_nonblocking()
 		self.assertRegex(data.decode('utf-8'), r"^Last login: |\[root@.+ ~\]# $")
