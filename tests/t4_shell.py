@@ -20,15 +20,15 @@ class ShellTest(unittest.TestCase):
 		self.assertIsInstance(channel, libssh.Channel)
 
 		data = channel.read_nonblocking()
-		self.assertRegex(data, b"^$|^Last login: ")
+		self.assertRegex(data.decode('utf-8'), r"^$|^Last login: ")
 		sleep(1)
 		data = channel.read_nonblocking()
-		self.assertRegex(data, b"^Last login: |\[root@.+ ~\]# $")
+		self.assertRegex(data.decode('utf-8'), r"^Last login: |\[root@.+ ~\]# $")
 
 		channel.write(b"echo hello world\n")
 		sleep(1)
 		data = channel.read_nonblocking()
-		self.assertRegex(data, b"^echo hello world\r\nhello world\r\n")
+		self.assertRegex(data.decode('utf-8'), r"^echo hello world\r\nhello world\r\n")
 
 		session.disconnect()
 
