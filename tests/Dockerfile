@@ -1,8 +1,7 @@
 FROM registry.fedoraproject.org/fedora
-RUN if test -f /etc/centos-release ; then dnf install -y 'dnf-command(config-manager)' ; fi
-RUN if test -f /etc/centos-release && grep 'CentOS Stream release 8' /etc/centos-release ; then \
-	dnf config-manager --set-enabled powertools ; \
-	rm -f /run/nologin ; fi
+RUN if ! test -f /etc/fedora-release ; then dnf install -y 'dnf-command(config-manager)' ; fi
+RUN if test -f /etc/almalinux-release && grep 'AlmaLinux release 8' /etc/almalinux-release ; then \
+	dnf config-manager --set-enabled powertools ; fi
 RUN if test -f /etc/centos-release && grep 'CentOS Stream release 9' /etc/centos-release ; then \
 	dnf config-manager --set-enabled crb ; fi
 RUN dnf install -y --setopt=install_weak_deps=False python3-devel python3-setuptools python3-Cython make gcc libssh-devel openssh-server openssh-clients rpm-build
