@@ -28,6 +28,6 @@ jobs:
       - name: Run container
         run: docker run --name python-libssh --rm -d python-libssh
       - name: Run tests in the container
-        run: docker exec python-libssh python3 setup.py test
+        run: docker logs -f python-libssh & docker exec python-libssh python3 setup.py test
       - name: Run tests with installed rpm
-        run: docker exec python-libssh bash -c 'cp -rp tests /tmp/tests && cd /tmp/tests && for i in *.py ; do python3 -Werror $i ; done'
+        run: docker logs -f python-libssh & docker exec python-libssh bash -c 'cp -rp tests /tmp/tests && cd /tmp/tests && for i in *.py ; do python3 -Werror $i ; done'

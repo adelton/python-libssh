@@ -16,4 +16,4 @@ WORKDIR /src
 RUN python3 setup.py build_ext --inplace
 RUN python3 setup.py bdist_rpm
 RUN rpm -Uvh dist/python-libssh*.rpm
-ENTRYPOINT [ "/usr/sbin/sshd", "-D" ]
+ENTRYPOINT [ "/usr/sbin/sshd", "-D", "-e" ]
