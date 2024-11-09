@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     name: Run tests in container
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -22,10 +22,10 @@ jobs:
       - name: Set the right OS in the Dockerfile
         run: sed -i "s#^FROM.*#FROM ${{ matrix.os }}#" tests/Dockerfile
       - name: Build image
-        run: docker build -t python-libssh -f tests/Dockerfile .
+        run: podman build --env SOURCE_DATE_EPOCH=$( date '+%s' -d $( git show --pretty='tformat:%cI' -s HEAD ) ) -t python-libssh -f tests/Dockerfile .
       - name: Run container
-        run: docker run --name python-libssh --rm -d python-libssh
+        run: podman run --name python-libssh --rm -d python-libssh
       - name: Run tests with unittest discover
-        run: docker exec python-libssh python3 -m unittest discover -v -s tests -p 't*_*.py'
+        run: podman exec python-libssh python3 -m unittest discover -v -s tests -p 't*_*.py'
       - name: Run tests manually
-        run: docker exec python-libssh bash -c 'cp -rp tests /tmp/tests && cd /tmp/tests && for i in *.py ; do python3 -Werror $i ; done'
+        run: podman exec python-libssh bash -c 'cp -rp tests /tmp/tests && cd /tmp/tests && for i in *.py ; do python3 -Werror $i ; done'
