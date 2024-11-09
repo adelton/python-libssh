@@ -1,0 +1,21 @@
+
+[project]
+name = "libssh"
+version = "0.0.1"
+authors = [{name = "Jan Pazdziora"}]
+license = {text = "GNU Lesser General Public License v2 (LGPLv2)"}
+description = "Python bindings to client functionality of libssh"
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "License :: OSI Approved :: GNU Lesser General Public License v2 (LGPLv2)",
+    "Topic :: Security",
+]
+
+[build-system]
+requires = ["setuptools", "Cython"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["libssh"]
+package-dir = {"libssh" = "."}
+

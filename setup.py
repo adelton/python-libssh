@@ -8,10 +8,6 @@ from setuptools import setup
 from setuptools.extension import Extension
 from Cython.Build import cythonize
 
-import unittest
-def get_tests():
-	return unittest.TestLoader().discover("tests", pattern="*.py")
-
 setup(
 	name = "python-libssh",
 	version = "0.0.1",
@@ -24,6 +20,5 @@ setup(
 		"License :: OSI Approved :: GNU Lesser General Public License v2 (LGPLv2)",
 		"Topic :: Security",
 	],
-	test_suite = "setup.get_tests",
 )
 

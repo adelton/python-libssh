@@ -5,6 +5,11 @@
 
 Build the extension with
 ```
+make rpm
+rpm -Uvh dist/python-libssh*.rpm
+```
+or
+```
 python3 setup.py build_ext --inplace
 ```
 
@@ -16,12 +21,16 @@ In other words, `ssh localhost true` needs to work.
 
 Test it with
 ```
+python3 -m unittest discover -v -s tests -p 't*_*.py'
+```
+or
+```
 python3 setup.py test
 ```
 
 ## Author
 
-Written by Jan Pazdziora, 2019
+Written by Jan Pazdziora, 2019--2024
 
 ## License
 

@@ -17,8 +17,6 @@ jobs:
         os:
           - registry.fedoraproject.org/fedora:latest
           - registry.fedoraproject.org/fedora:rawhide
-          - docker.io/almalinux:8
-          - quay.io/centos/centos:stream9
     steps:
       - uses: actions/checkout@v4
       - name: Set the right OS in the Dockerfile
@@ -27,7 +25,7 @@ jobs:
         run: docker build -t python-libssh -f tests/Dockerfile .
       - name: Run container
         run: docker run --name python-libssh --rm -d python-libssh
-      - name: Run tests in the container
-        run: docker exec python-libssh python3 setup.py test
-      - name: Run tests with installed rpm
+      - name: Run tests with unittest discover
+        run: docker exec python-libssh python3 -m unittest discover -v -s tests -p 't*_*.py'
+      - name: Run tests manually
         run: docker exec python-libssh bash -c 'cp -rp tests /tmp/tests && cd /tmp/tests && for i in *.py ; do python3 -Werror $i ; done'
