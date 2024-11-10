@@ -21,6 +21,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Set the right OS in the Dockerfile
         run: sed -i "s#^FROM.*#FROM ${{ matrix.os }}#" tests/Dockerfile
+      - name: Disable AppArmor for unix-chkpwd
+        run: sudo ln -s /etc/apparmor.d/unix-chkpwd /etc/apparmor.d/disable/ && sudo apparmor_parser -R /etc/apparmor.d/unix-chkpwd
       - name: Build image
         run: podman build --env SOURCE_DATE_EPOCH=$( date '+%s' -d $( git show --pretty='tformat:%cI' -s HEAD ) ) -t python-libssh -f tests/Dockerfile .
       - name: Run container
