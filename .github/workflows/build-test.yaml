@@ -10,13 +10,16 @@ on:
 jobs:
   build:
     name: Run tests in container
-    runs-on: ubuntu-24.04
+    runs-on: ${{ matrix.runs-on }}
     strategy:
       fail-fast: false
       matrix:
         os:
           - registry.fedoraproject.org/fedora:latest
           - registry.fedoraproject.org/fedora:rawhide
+        runs-on:
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v4
       - name: Set the right OS in the Dockerfile
