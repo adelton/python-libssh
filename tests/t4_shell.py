@@ -28,7 +28,7 @@ class ShellTest(unittest.TestCase):
 		channel.write(b"echo hello world\n")
 		sleep(1)
 		data = channel.read_nonblocking()
-		self.assertRegex(data.decode('utf-8'), r"^echo hello world\r\n(\033]8003;start=.*?\033\\)?hello world\r\n")
+		self.assertRegex(data.decode('utf-8'), r"^echo hello world\r\n(\033]3008;start=.*?\033\\)?hello world\r\n")
 
 		session.disconnect()
 
