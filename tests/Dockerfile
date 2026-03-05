@@ -21,5 +21,5 @@ RUN dnf builddep -y python-libssh.spec
 RUN make dynamic-build-requires || dnf builddep -y dist/*.buildreqs.nosrc.rpm
 RUN make rpm
 # RUN dnf install -y dist/python-libssh*.rpm
-RUN rpm -Uvh dist/python-libssh*.rpm
+RUN rpm -Uvh --nosignature dist/python-libssh*.rpm
 ENTRYPOINT [ "/usr/sbin/sshd", "-D" ]
