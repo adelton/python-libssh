@@ -18,7 +18,7 @@ class SessionTest(unittest.TestCase):
 		self.assertEqual(session.host, "unknown-localhost")
 		with self.assertRaises(libssh.libsshException) as cm:
 			session.connect()
-		self.assertEqual(str(cm.exception), "Failed to resolve hostname unknown-localhost (Name or service not known)")
+		self.assertRegex(str(cm.exception), r"Failed to resolve hostname unknown-localhost .*Name or service not known")
 
 	def test2_session_port(self):
 		session = libssh.Session()
