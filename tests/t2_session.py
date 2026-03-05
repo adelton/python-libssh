@@ -102,6 +102,7 @@ class SessionTest(unittest.TestCase):
 		self.assertIsInstance(session, libssh.Session)
 		session.host = "localhost"
 		session.connect()
+		self.assertTrue(session.is_connected())
 		# now authenticate via libssh (pubkey)
 		session.authenticate_pubkey()
 		self.assertTrue(session.is_connected())
